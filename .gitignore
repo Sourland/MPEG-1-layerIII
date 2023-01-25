@@ -1,2 +1,4 @@
 *.pdf
 useful stuff
+.idea
+__pycache__
