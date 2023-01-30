@@ -3,6 +3,7 @@ from mp3 import make_mp3_analysisfb, make_mp3_synthesisfb
 from nothing import donothing, idonothing
 from scipy.io import wavfile
 
+
 def frame_sub_analysis(xbuff: np.ndarray, H: np.ndarray, q: int) -> np.ndarray:
     """
 
@@ -55,7 +56,7 @@ L = 512
 G = make_mp3_synthesisfb(h, M)
 H = make_mp3_analysisfb(h, M)
 samplerate, data = wavfile.read("../myfile.wav")
-sample_number = (N-1) * M + L
+sample_number = (N - 1) * M + L
 xbuff = data[0:sample_number]
 Y = frame_sub_analysis(xbuff, H, N)
 Yc = donothing(Y)
