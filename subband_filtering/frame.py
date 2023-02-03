@@ -1,7 +1,5 @@
+import numpy
 import numpy as np
-from mp3 import make_mp3_analysisfb, make_mp3_synthesisfb
-from nothing import donothing, idonothing
-from scipy.io import wavfile
 
 
 def frame_sub_analysis(xbuff: np.ndarray, H: np.ndarray, q: int) -> np.ndarray:
@@ -49,16 +47,3 @@ def frame_sub_synthesis(ybuff: np.ndarray, G: np.ndarray) -> np.ndarray:
         Z[n * M:(n + 1) * M] = M * np.flip(z[:, 0])
     return Z.T.flatten()
 
-
-h = np.load("../h.npy", allow_pickle=True).tolist()["h"]
-M, N = 32, 36
-L = 512
-G = make_mp3_synthesisfb(h, M)
-H = make_mp3_analysisfb(h, M)
-samplerate, data = wavfile.read("../myfile.wav")
-sample_number = (N - 1) * M + L
-xbuff = data[0:sample_number]
-Y = frame_sub_analysis(xbuff, H, N)
-Yc = donothing(Y)
-print(Yc)
-print(Y)
