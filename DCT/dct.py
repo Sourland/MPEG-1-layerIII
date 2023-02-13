@@ -13,3 +13,5 @@ def iframeDCT(Y):
 def DCT_power(dct_coefficients):
     norm = np.power(np.abs(dct_coefficients), 2)
     return 10 * np.log10(norm)
+
+
