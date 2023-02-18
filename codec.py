@@ -83,25 +83,25 @@ def decoder(Y_tot, h, M, N):
     return decoded_wavin
 
 
-h = np.load("../h.npy", allow_pickle=True).tolist()["h"]
-M, N = 32, 36
-L = 512
-samplerate, wavin = wavfile.read("../myfile.wav")
-
-decoded = codec(wavin, h, M, N)
-
-wavfile.write("../decoded_myfile.wav", samplerate, decoded.astype(np.int16))
-
-print(wavin.size)
-print(decoded.size)
-
-shifted_wavin = wavin[L-M:]
-shifted_decoded = decoded[:-L+M]
-
-signal = np.mean(shifted_wavin**2)
-noise = np.mean((shifted_wavin - shifted_decoded)**2)
-print(signal)
-print(noise)
-SNR = 10*np.log(signal/noise)
-
-print(f"SNR = {SNR}")
+# h = np.load("h.npy", allow_pickle=True).tolist()["h"]
+# M, N = 32, 36
+# L = 512
+# samplerate, wavin = wavfile.read("myfile.wav")
+#
+# decoded = codec(wavin, h, M, N)
+#
+# wavfile.write("decoded_myfile.wav", samplerate, decoded.astype(np.int16))
+#
+# print(wavin.size)
+# print(decoded.size)
+#
+# shifted_wavin = wavin[L-M:]
+# shifted_decoded = decoded[:-L+M]
+#
+# signal = np.mean(shifted_wavin**2)
+# noise = np.mean((shifted_wavin - shifted_decoded)**2)
+# print(signal)
+# print(noise)
+# SNR = 10*np.log(signal/noise)
+#
+# print(f"SNR = {SNR}")
