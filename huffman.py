@@ -2,7 +2,6 @@ import heapq
 from collections import defaultdict
 import numpy as np
 
-codes = {}
 
 class Node:
     def __init__(self, probability, symbol=None, left=None, right=None):
@@ -35,33 +34,60 @@ def print_codes(root, sequence):
     printCodes(root.right, sequence + "1")
 
 
-def store_codes(root, sequence):
+def store_codes(root, sequence, frame_codes):
     if root is None:
         return
+
+    if root.left is None and root.right is None and root.symbol == '$':
+        frame_codes[root.symbol] = "0"
+        return
+
     if root.symbol != '$':
-        codes[root.symbol] = sequence
-    store_codes(root.left, sequence + "0")
-    store_codes(root.right, sequence + "1")
+        frame_codes[root.symbol] = sequence
+    store_codes(root.left, sequence + "0", frame_codes)
+    store_codes(root.right, sequence + "1", frame_codes)
 
 
-def huffman_encode(data):
-    global minHeap
-    probabilities = get_symbol_probabilities(data)
+def build_heap(heap, probabilities):
     for key in probabilities:
-        minHeap.append(Node(probabilities[key], key))
+        heap.append(Node(probabilities[key], key))
 
-    heapq.heapify(minHeap)
-    while len(minHeap) != 1:
-        left = heapq.heappop(minHeap)
-        right = heapq.heappop(minHeap)
+    heapq.heapify(heap)
+    while len(heap) != 1:
+        left = heapq.heappop(heap)
+        right = heapq.heappop(heap)
         top = Node(probability=left.probability + right.probability, symbol='$')
         top.left = left
         top.right = right
-        heapq.heappush(minHeap, top)
-    return store_codes(minHeap[0], "")
+        heapq.heappush(heap, top)
 
 
-def decode_file(root, s):
+def huffman_build_codes(heap, probabilities):
+    frame_codes = {}
+    build_heap(heap, probabilities)
+    store_codes(heap[0], "", frame_codes)
+    return frame_codes
+
+
+def huffman_encode(data):
+    heap = []
+    probabilities = get_symbol_probabilities(data)
+    codes = huffman_build_codes(heap, probabilities)
+    encoded = ""
+    for symbol in data:
+        encoded += codes[symbol]
+    return probabilities, encoded
+
+
+def huffman_decode(encoded, probabilities):
+    heap = []
+    build_heap(heap, probabilities)
+    return decode_sequence(heap[0], encoded)
+
+
+def decode_sequence(root, s):
+    if root.left is None and root.right is None:
+        return root.symbol
     curr = root
     ans = []
     n = len(s)
@@ -75,16 +101,16 @@ def decode_file(root, s):
         if curr.left is None and curr.right is None:
             ans.append(curr.symbol)
             curr = root
-    return ans
+    return np.array(ans)
 
 
-minHeap = []
-arr = np.array([0, 1, 1, 2, 2, 2, 3, 3, 3, 3])
-huffman_encode(arr)
-print(codes)
-encoded = ""
-for symbol in arr:
-    encoded += codes[symbol]
-
-print(encoded)
-print(decode_file(minHeap[0], encoded))
+# heap = []
+# arr = np.array([0, 1, 1, 2, 2, 2, 3, 3, 3, 3])
+# arr = np.array([1151, 3, 3, 2, 2, 2])
+# probabilites, encoded = huffman_encode(arr)
+#
+# print(encoded)
+# print(probabilites)
+#
+# decoded = huffman_decode(encoded, probabilites)
+# print(decoded)

@@ -48,7 +48,7 @@ def run_length_encode(symb_index: np.ndarray, K) -> np.ndarray:
             current_run_length += 1
 
         # Add the current symbol and its run length to the run-length encoded symbols list
-        rle.append([symb_index[i], current_run_length-1])
+        rle.append([symb_index[i], current_run_length - 1])
 
         # Update the index to start after the current run of zeros
         i += current_run_length

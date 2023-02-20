@@ -49,7 +49,7 @@ def ST_init(c: np.ndarray, D: np.ndarray) -> np.ndarray:
         if (P[k] > P[k + 1]) and (P[k] > P[k - 1]) and np.all(P[k] > P[neighbors] + 7):
             tonal_components.append(k)
 
-    return np.unique(tonal_components)
+    return np.unique(tonal_components).astype(int)
 
 
 def mask_power(c: np.ndarray, ST: np.ndarray) -> np.ndarray:

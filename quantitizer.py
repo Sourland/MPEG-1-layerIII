@@ -92,10 +92,11 @@ def quantizer(x: np.ndarray, b):
         array = np.append(zone_deciders, x[i])
         positions[i] = array.argsort().argsort()[-1]
 
-    return positions.astype(int)
+    return positions.astype(int) - (2 ** b - 1)
 
 
 def dequantizer(synb_index, b):
+    synb_index = synb_index + (2 ** b - 1)
     w_b = 1 / (2 ** b)
     zone_deciders = np.array([])
 
@@ -220,17 +221,17 @@ def all_bands_dequantizer(symb_index: np.ndarray, B: np.ndarray, SF: np.ndarray)
     return dequantized_c
 
 
-h = np.load("h.npy", allow_pickle=True).tolist()["h"]
-M, N = 32, 36
-L = 512
-samplerate, wavin = wavfile.read("myfile.wav")
-
-Y_tot = coder(wavin, h, M, N)
-pepe = 0
-Yc = Y_tot[pepe * N:(pepe + 1) * N, :]
-Y_dct = frameDCT(Yc)
-
-c_hat, scales = DCT_band_scale(Y_dct)
+# h = np.load("h.npy", allow_pickle=True).tolist()["h"]
+# M, N = 32, 36
+# L = 512
+# samplerate, wavin = wavfile.read("myfile.wav")
+#
+# Y_tot = coder(wavin, h, M, N)
+# pepe = 0
+# Yc = Y_tot[pepe * N:(pepe + 1) * N, :]
+# Y_dct = frameDCT(Yc)
+#
+# c_hat, scales = DCT_band_scale(Y_dct)
 # for b in range(1, 17):
 #     x = np.random.rand(5)
 #     print(f"initial: {x}, b = {b}")
@@ -239,10 +240,10 @@ c_hat, scales = DCT_band_scale(Y_dct)
 #     x = dequantizer(x_quant, b)
 #     print(f"Qd for b = {b}: {x}\n")
 
-D = Dk_Sparse(M * N - 1)
-Tg = psycho(Y_dct, D)
+# D = Dk_Sparse(M * N - 1)
+# Tg = psycho(Y_dct, D)
 # plt.plot(Tg)
 # plt.show()
-symbols, sf, bits = all_bands_quantizer(Y_dct, Tg)
-Y_dct_hat = all_bands_dequantizer(symbols, bits, sf)
-haha = 0
+# symbols, sf, bits = all_bands_quantizer(Y_dct, Tg)
+# Y_dct_hat = all_bands_dequantizer(symbols, bits, sf)
+# haha = 0
