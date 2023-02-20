@@ -17,13 +17,12 @@ def MP3_coder(input, h):
     Y_tot = coder(input, h, M, N)
     MAX_LOOP = Y_tot.shape[0] // N
     probabilities = []
-    frame_huff_length = []
     bits_per_band_all_frames = []
     scale_factors_all_frames = []
-    f = open("encoded_steam.txt", "wb")
-    for i in range(MAX_LOOP):
-        if i % 10 == 0:
-            print(i)
+    huff_total = []
+    for i in range(MAX_LOOP//15):
+        if i % 25 == 0:
+            print(f"Encoding progress: " + "{:.2f}".format(i / (MAX_LOOP//10)) + "%")
         frame = Y_tot[i * N:(i + 1) * N]
         dct_coefficients = frameDCT(frame)
         D = Dk_Sparse(M * N - 1)
@@ -35,28 +34,28 @@ def MP3_coder(input, h):
         rle_tuple = tuple([tuple(row) for row in rle])
         prob, huff_enc = huffman_encode(rle_tuple)
         probabilities.append(prob)
-        frame_huff_length.append(huff_enc)
-        f.write(bytes(huff_enc, 'utf-8'))
+        huff_total.append(huff_enc)
 
-    f.close()
-    return probabilities, frame_huff_length, bits_per_band_all_frames, scale_factors_all_frames
+    return probabilities, huff_total, bits_per_band_all_frames, scale_factors_all_frames
 
 
-def MP3_decoder(probabilites, frame_huff_length, scale_factors_all_frames, bits_per_band_all_frames):
+def MP3_decoder(probabilites, frame_huff_sequence, scale_factors_all_frames, bits_per_band_all_frames):
     M, N = 32, 36
-    f = open("encoded_steam.txt", 'rb')
-    sequence = f.read()
-    reading_idx = 0
-    Y_tot = zeros((N, M))
-    for prob, length, scale_factors, bits_per_band in zip(probabilites, frame_huff_length, scale_factors_all_frames,
-                                                          bits_per_band_all_frames):
-        encoded_sequence = sequence[reading_idx:reading_idx + length]
-        reading_idx += length
-        rle_symbols = huffman_decode(np.asarray(encoded_sequence), prob)
-        symbols = run_length_decode(rle_symbols, len(symbols))
+    Y_tot = np.array([])
+
+    for idx, (prob, length, scale_factors, bits_per_band) in enumerate(
+            zip(probabilites, frame_huff_sequence, scale_factors_all_frames,
+                bits_per_band_all_frames)):
+
+        encoded_sequence = frame_huff_sequence[idx]
+        rle_symbols = huffman_decode(encoded_sequence, prob)
+        symbols = run_length_decode(np.asarray(rle_symbols), len(rle_symbols))
         dct_coeffs = all_bands_dequantizer(symbols, bits_per_band, scale_factors)
         Yc = iframeDCT(dct_coeffs, N, M)
-        Y_tot = np.vstack((decoded_signal, Yc))
+        if Y_tot.shape[0] == 0:
+            Y_tot = Yc
+        else:
+            Y_tot = np.vstack((Y_tot, Yc))
 
     return decoder(Y_tot, h, M, N)
 
@@ -65,6 +64,8 @@ h = np.load("h.npy", allow_pickle=True).tolist()["h"]
 M, N = 32, 36
 L = 512
 samplerate, wavin = wavfile.read("myfile.wav")
-prob, huff_len, bits, scales = MP3_coder(wavin, h)
-signal = MP3_decoder(prob, huff_len, bits, scales)
-wavfile.write("decoded_myfile.wav", samplerate, decoded.astype(np.int16))
+print(len(wavin))
+prob, huff_bits, bits, scales = MP3_coder(wavin, h)
+signal = MP3_decoder(prob, huff_bits, scales, bits)
+print(len(signal))
+wavfile.write("decoded_myfileMP3.wav", samplerate, signal.astype(np.int16))

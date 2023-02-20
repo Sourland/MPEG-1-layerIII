@@ -225,25 +225,53 @@ def all_bands_dequantizer(symb_index: np.ndarray, B: np.ndarray, SF: np.ndarray)
 # M, N = 32, 36
 # L = 512
 # samplerate, wavin = wavfile.read("myfile.wav")
-#
 # Y_tot = coder(wavin, h, M, N)
-# pepe = 0
-# Yc = Y_tot[pepe * N:(pepe + 1) * N, :]
-# Y_dct = frameDCT(Yc)
+# all_pb = []
+# all_tg = []
+# for pepe in range(4):
+#     Yc = Y_tot[pepe * N:(pepe + 1) * N, :]
+#     Y_dct = frameDCT(Yc)
 #
-# c_hat, scales = DCT_band_scale(Y_dct)
-# for b in range(1, 17):
-#     x = np.random.rand(5)
-#     print(f"initial: {x}, b = {b}")
-#     x_quant = quantizer(x, b)
-#     # print(f"Symbols = {x_quant} for b = {b}\n")
-#     x = dequantizer(x_quant, b)
-#     print(f"Qd for b = {b}: {x}\n")
+#     c_hat, scales = DCT_band_scale(Y_dct)
+    # for b in range(1, 17):
+    #     x = np.random.rand(5)
+    #     print(f"initial: {x}, b = {b}")
+    #     x_quant = quantizer(x, b)
+    #     # print(f"Symbols = {x_quant} for b = {b}\n")
+    #     x = dequantizer(x_quant, b)
+    #     print(f"Qd for b = {b}: {x}\n")
+    #
+    # D = Dk_Sparse(M * N - 1)
+    # Tg = psycho(Y_dct, D)
+    # symbols, sf, bits = all_bands_quantizer(Y_dct, Tg)
+    # Y_dct_hat = all_bands_dequantizer(symbols, bits, sf)
+    # Pb = 10 * np.log10(np.abs(Y_dct_hat - Y_dct) ** 2)
+    # haha = 0
+    # all_tg.append(Tg)
+    # all_pb.append(Pb)
 
-# D = Dk_Sparse(M * N - 1)
-# Tg = psycho(Y_dct, D)
-# plt.plot(Tg)
+# plt.plot(all_tg[0])
+# plt.plot(all_pb[0])
+# plt.grid()
+# plt.legend(['Tg', 'Pb'])
 # plt.show()
-# symbols, sf, bits = all_bands_quantizer(Y_dct, Tg)
-# Y_dct_hat = all_bands_dequantizer(symbols, bits, sf)
-# haha = 0
+
+# plt.plot(all_tg[1])
+# plt.plot(all_pb[1])
+# plt.grid()
+# plt.legend(['Tg', 'all_pb'])
+
+# plt.show()
+# plt.plot(all_tg[2])
+# plt.plot(all_pb[2])
+# plt.grid()
+# plt.legend(['Tg', 'Pb'])
+
+# plt.show()
+# plt.plot(all_tg[4])
+# plt.plot(all_pb[4])
+# plt.grid()
+# plt.legend(['Tg', 'Pb'])
+
+
+# plt.show()

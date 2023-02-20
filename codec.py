@@ -65,7 +65,7 @@ def decoder(Y_tot, h, M, N):
 
     number_of_frames = Y_tot.shape[0] // N
 
-    padding_size = wavin.size % N + L // M
+    padding_size = Y_tot.shape[0] % N + L // M
     padding = np.zeros((padding_size, Y_tot.shape[1]))
     padded_Y_tot = np.concatenate((Y_tot, padding))
 

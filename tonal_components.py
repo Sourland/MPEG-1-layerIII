@@ -3,6 +3,11 @@ from dct import DCT_power, frameDCT, iframeDCT
 from scipy.io import wavfile
 from helpers import Hz2Barks, spread_function_value, dct_frequencies
 from codec import coder
+import matplotlib.pyplot as plt
+
+M, N = 32, 36
+
+L = 512
 
 
 def Dk_Sparse(K_max: np.ndarray) -> np.ndarray:
@@ -34,8 +39,8 @@ def ST_init(c: np.ndarray, D: np.ndarray) -> np.ndarray:
         np.ndarray: A 1D array of indices of the selected tonal components of the signal.
     """
     # Compute power of DCT coefficients and flatten to 1D array
-    P = DCT_power(c).flatten()
-
+    P = DCT_power(c)
+    plt.show
     tonal_components = []
 
     for k in range(1, c.shape[0] - 1):
@@ -46,8 +51,9 @@ def ST_init(c: np.ndarray, D: np.ndarray) -> np.ndarray:
         neighbors = neighbors[(neighbors >= 0) & (neighbors < c.shape[0])]
 
         # Check if k is a local maximum and larger than its neighbors by at least 7 dB
-        if (P[k] > P[k + 1]) and (P[k] > P[k - 1]) and np.all(P[k] > P[neighbors] + 7):
-            tonal_components.append(k)
+        if (P[k] > P[k + 1]) and (P[k] > P[k - 1]):
+            if neighbors.size != 0 and np.all(P[k] > P[neighbors] + 7):
+                tonal_components.append(k)
 
     return np.unique(tonal_components).astype(int)
 
@@ -91,6 +97,9 @@ def ST_reduction(ST: np.ndarray, c: np.ndarray, Tq: list) -> tuple[np.ndarray, n
 
     # Select the tonal components whose mask power is greater than the absolute threshold
     Tq_ST = np.array(Tq)[ST]
+    Tq_nans = np.isnan(Tq_ST)
+    Tq_ST = np.delete(Tq_ST, Tq_nans)
+    P_M = np.delete(P_M, Tq_nans)
     mask_power_greater_than_Tq = P_M >= Tq_ST
     ST = ST[mask_power_greater_than_Tq]
     P_M = P_M[mask_power_greater_than_Tq]
@@ -101,7 +110,7 @@ def ST_reduction(ST: np.ndarray, c: np.ndarray, Tq: list) -> tuple[np.ndarray, n
     diff_signal_barks = np.abs(np.diff(signal_barks))
     reduced_ST = []
     for idx, st in enumerate(ST[:-1]):
-        if diff_signal_barks[idx] > 0.5:
+        if diff_signal_barks[idx] < 0.5:
             reduced_ST.append(st)
         elif P_M[idx] > P_M[idx + 1]:
             reduced_ST.append(ST[idx])
@@ -166,7 +175,7 @@ def masking_thresholds(ST: np.ndarray, PM: np.ndarray, Kmax: int) -> np.ndarray:
 
 def global_masking_thresholds(T_i: np.ndarray, T_q: np.ndarray) -> np.ndarray:
     """
-    Computes the global masking threshold for each subband based on the he values of the audibility threshold for
+    Computes the global masking threshold for each subband based on the values of the audibility threshold for
     the set of discrete frequencies of a frame and the audibility threshold of silence
 
     Args:
@@ -205,7 +214,7 @@ def psycho(dct_coefficients, subband_neighbors):
     Tq = np.load("Tq.npy", allow_pickle=True).tolist()[0]
 
     # Reduce the spectral envelope and determine the point spread function
-    ST, PST = ST_reduction(ST, Y_dct, Tq)
+    ST, PST = ST_reduction(ST, dct_coefficients, Tq)
 
     # Calculate the threshold in quiet and the maskers
     t_i = masking_thresholds(ST, PST, M * N - 1)
@@ -213,17 +222,18 @@ def psycho(dct_coefficients, subband_neighbors):
     # Calculate the global masking threshold
     return global_masking_thresholds(t_i, Tq)
 
-
-h = np.load("h.npy", allow_pickle=True).tolist()["h"]
-M, N = 32, 36
-L = 512
-samplerate, wavin = wavfile.read("myfile.wav")
-
-Y_tot = coder(wavin, h, M, N)
-Yc = Y_tot[4 * N:5 * N, :]
-Y_dct = frameDCT(Yc)
-Yy = iframeDCT(Y_dct, N, M)
-Dk = Dk_Sparse(M * N - 1)
-
-tg = psycho(Y_dct, Dk)
-haha = 0
+# h = np.load("h.npy", allow_pickle=True).tolist()["h"]
+# M, N = 32, 36
+# L = 512
+# samplerate, wavin = wavfile.read("myfile.wav")
+# Y_tot = coder(wavin, h, M, N)
+# Yc = Y_tot[0 * N:1 * N, :]
+# Y_dct = frameDCT(Yc)
+# P = DCT_power(Y_dct)
+# plt.plot(P)
+# plt.show()
+# Yy = iframeDCT(Y_dct, N, M)
+# Dk = Dk_Sparse(M * N - 1)
+#
+# tg = psycho(Y_dct, Dk)
+# haha = 0

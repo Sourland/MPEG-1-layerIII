@@ -74,6 +74,10 @@ def run_length_decode(run_lengths: np.ndarray, K) -> np.ndarray:
         array([1, 1, 0, 3, 0, 4, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 2, 0, 0])
 
     """
+    if run_lengths.ndim == 1:
+        decoded_sequence = np.array([run_lengths[0]])
+        return np.append(decoded_sequence, [0 for i in range(run_lengths[1])])
+
     # Initialize an empty array to store the decoded sequence.
     decoded_sequence = np.array([])
 
