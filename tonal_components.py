@@ -86,34 +86,32 @@ def ST_reduction(ST: np.ndarray, c: np.ndarray, Tq: list) -> tuple[np.ndarray, n
         - reduced_ST (np.ndarray): A numpy array of the reduced tonal components.
         - mask_power_reduced_ST (np.ndarray): A numpy array of the corresponding mask power of the reduced tonal components.
     """
-    # Calculate the mask power of the tonal components
+    # Calculate the mask power of the tonal components and the DCT coefficients
     P_M = mask_power(c, ST)
+
     # Select the tonal components whose mask power is greater than the absolute threshold
     Tq_ST = np.array(Tq)[ST]
     mask_power_greater_than_Tq = P_M >= Tq_ST
     ST = ST[mask_power_greater_than_Tq]
+    P_M = P_M[mask_power_greater_than_Tq]
 
     # Select tonal components that are separated by at least 0.5 Bark
     signal_frequencies = dct_frequencies(ST, c.shape[0])
     signal_barks = Hz2Barks(signal_frequencies)
     diff_signal_barks = np.abs(np.diff(signal_barks))
     reduced_ST = []
-    for i in range(len(ST) - 1):
-        if diff_signal_barks[i] > 0.5:
-            reduced_ST.append(ST[i])
+    for idx, st in enumerate(ST[:-1]):
+        if diff_signal_barks[idx] > 0.5:
+            reduced_ST.append(st)
+        elif P_M[idx] > P_M[idx + 1]:
+            reduced_ST.append(ST[idx])
         else:
-            candidates = [
-                P_M[ST[i]],
-                P_M[ST[i + 1]]
-            ]
-            winner = np.argmax(candidates)
-            reduced_ST.append(candidates[winner])
+            reduced_ST.append(ST[idx + 1])
 
-    reduced_ST = np.array(reduced_ST)
+    reduced_ST = np.unique(np.array(reduced_ST))
 
     # Return the reduced tonal components and their corresponding mask power
-    mask_power_reduced_ST = P_M[np.where(ST == reduced_ST)[0]]
-    return reduced_ST.astype(int), mask_power_reduced_ST
+    return reduced_ST.astype(int), P_M[np.in1d(ST, reduced_ST)]
 
 
 def spread_function(ST: np.ndarray, PM: np.ndarray, Kmax: int) -> np.ndarray:
@@ -129,11 +127,15 @@ def spread_function(ST: np.ndarray, PM: np.ndarray, Kmax: int) -> np.ndarray:
         np.ndarray: 2D array representing the spread function values between each tonal component and frequency band.
     """
     frequencies = dct_frequencies(np.array([i for i in range(Kmax + 1)]), Kmax + 1)
-    SF = np.zeros((Kmax + 1, len(ST)))
+
+    SF_k = len(ST)
+
+    SF = np.zeros((Kmax + 1, SF_k))
+
     for i in range(SF.shape[0]):
         for k in range(SF.shape[1]):
             Dz = Hz2Barks(frequencies[i]) - Hz2Barks(frequencies[k])
-            SF[i, k] = spread_function_value(Dz, k, PM)
+            SF[i, k] = spread_function_value(Dz, PM[k])
     return SF
 
 
@@ -152,7 +154,9 @@ def masking_thresholds(ST: np.ndarray, PM: np.ndarray, Kmax: int) -> np.ndarray:
     """
     SF = spread_function(ST, PM, Kmax)
     frequencies = dct_frequencies(np.array([i for i in range(Kmax + 1)]), Kmax + 1)
-    T_m = np.zeros((Kmax + 1, len(ST)))
+
+    SF_k = len(ST)
+    T_m = np.zeros((Kmax + 1, SF_k))
     for i in range(SF.shape[0]):
         for k in range(SF.shape[1]):
             T_m[i, k] = PM[k] - 0.275 * Hz2Barks(frequencies[k]) + SF[i, k] - 6.025
@@ -216,7 +220,7 @@ L = 512
 samplerate, wavin = wavfile.read("myfile.wav")
 
 Y_tot = coder(wavin, h, M, N)
-Yc = Y_tot[:N, :]
+Yc = Y_tot[4 * N:5 * N, :]
 Y_dct = frameDCT(Yc)
 Yy = iframeDCT(Y_dct, N, M)
 Dk = Dk_Sparse(M * N - 1)
